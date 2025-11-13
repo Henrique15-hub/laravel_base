@@ -12,10 +12,9 @@ use App\Http\Requests\User\UserStoreRequest;
 
 class UserController extends Controller
 {
-    private $userServices;
-    public function __construct(UserServices $us)
+    public function __construct(protected UserServices $userServices)
     {
-        $this->userServices = $us;
+        //
     }
     public function index(): JsonResponse
     {

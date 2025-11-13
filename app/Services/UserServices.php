@@ -9,14 +9,6 @@ class UserServices
     {
         $users = User::all();
 
-        if (!$users) {
-            return [
-                'success' => false,
-                'message' => 'None user found',
-                'status' => 404
-            ];
-        }
-
         return [
             'success' => true,
             'message' => 'Showing all users',
@@ -92,6 +84,8 @@ class UserServices
     public function destroy($user)
     {
         $user->delete();
+
+        $user = User::where('id', $user['id'])->first();
 
         if ($user) {
             return [
