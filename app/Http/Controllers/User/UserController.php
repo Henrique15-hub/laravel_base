@@ -1,58 +1,64 @@
 <?php
 
 namespace App\Http\Controllers\User;
-
-use App\Http\Requests\User\UserUpdateRequest;
-use Illuminate\Http\Request;
-use App\Services\UserServices;
-use Illuminate\Http\JsonResponse;
-use App\Helpers\JsonResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\UserStoreRequest;
+use App\Http\Requests\User\UserUpdateRequest;
+use App\Services\UserService;
+use app\useCase\User\CreateUserUseCase;
+use app\useCase\User\DestroyUserUseCase;
+use app\useCase\User\IndexUserUseCase;
+use app\useCase\User\UpdateUserUseCase;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function __construct(protected UserServices $userServices)
-    {
+    public function __construct(
+        protected UserService $service,
+        private CreateUserUseCase $createUseruseCase,
+        private UpdateUserUseCase $updateUserUseCase,
+        private DestroyUserUseCase $destroyUserUseCase,
+        private IndexUserUseCase $indexUserUseCase,
+    ) {
         //
     }
+
     public function index(): JsonResponse
     {
-        $response = $this->userServices->index();
+        $users = $this->indexUserUseCase->execute();
 
-        return JsonResponseHelper::jsonResponseFormater($response);
+        return response()->json([
+            'message' => 'Showing all users',
+            'users' => $users
+        ]);
     }
-
     public function store(UserStoreRequest $request): JsonResponse
     {
-        $validatedData = $request->validated();
+        $user = $this->createUseruseCase->execute($request->validated());
 
-        $response = $this->userServices->store($validatedData);
-
-        return JsonResponseHelper::jsonResponseFormater($response);
-    }
-
-    public function show(int $id): JsonResponse
-    {
-        $response = $this->userServices->show($id);
-
-        return JsonResponseHelper::jsonResponseFormater($response);
+        return response()->json([
+            'message' => 'user created successfully',
+            'user' => $user
+        ], 201);
     }
 
     public function update(UserUpdateRequest $request): JsonResponse
     {
-        $validatedData = $request->validated();
+        $user = $this->updateUserUseCase->execute($request->validated(), auth()->id());
 
-        $response = $this->userServices->update($validatedData, auth()->user());
-
-        return JsonResponseHelper::jsonResponseFormater($response);
+        return response()->json([
+            'message' => 'user updated successfully',
+            'user' => $user
+        ]);
     }
 
     public function destroy(): JsonResponse
     {
-        $response = $this->userServices->destroy(auth()->user());
+        $this->destroyUserUseCase->execute(auth()->id());
 
-        return JsonResponseHelper::jsonResponseFormater($response);
+        return response()->json([
+            'message' => 'user deleted successfully',
+        ]);
     }
 
 }
